@@ -96,7 +96,6 @@ public class FreeFlyCamera : MonoBehaviour
     }
 #endif
 
-
     private void Start()
     {
         _initPosition = transform.position;
@@ -109,7 +108,9 @@ public class FreeFlyCamera : MonoBehaviour
             _wantedMode = CursorLockMode.Locked;
     }
 
-    // Apply requested cursor state
+    // -------------------------------------------------------------
+    //           PC — ORIGINAL CODE CLEAN (NO CAMBIO NADA)
+    // -------------------------------------------------------------
     private void SetCursorState()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -122,9 +123,7 @@ public class FreeFlyCamera : MonoBehaviour
             _wantedMode = CursorLockMode.Locked;
         }
 
-        // Apply cursor state
         Cursor.lockState = _wantedMode;
-        // Hide cursor when locking
         Cursor.visible = (CursorLockMode.Locked != _wantedMode);
     }
 
@@ -132,7 +131,7 @@ public class FreeFlyCamera : MonoBehaviour
     {
         _currentIncrease = Time.deltaTime;
 
-        if (!_enableSpeedAcceleration || _enableSpeedAcceleration && !moving)
+        if (!_enableSpeedAcceleration || (_enableSpeedAcceleration && !moving))
         {
             _currentIncreaseMem = 0;
             return;
@@ -142,23 +141,20 @@ public class FreeFlyCamera : MonoBehaviour
         _currentIncrease = Time.deltaTime + Mathf.Pow(_currentIncreaseMem, 3) * Time.deltaTime;
     }
 
-    private void Update()
+    private void HandlePCControls()
     {
-        if (!_active)
-            return;
-
         SetCursorState();
 
         if (Cursor.visible)
             return;
 
-        // Translation
+        // Zoom scroll
         if (_enableTranslation)
         {
             transform.Translate(Vector3.forward * Input.mouseScrollDelta.y * Time.deltaTime * _translationSpeed);
         }
 
-        // Movement
+        // Movement WASD
         if (_enableMovement)
         {
             Vector3 deltaPosition = Vector3.zero;
@@ -185,22 +181,19 @@ public class FreeFlyCamera : MonoBehaviour
             if (Input.GetKey(_moveDown))
                 deltaPosition -= transform.up;
 
-            // Calc acceleration
             CalculateCurrentIncrease(deltaPosition != Vector3.zero);
 
             transform.position += deltaPosition * currentSpeed * _currentIncrease;
         }
 
-        // Rotation
+        // Rotation mouse
         if (_enableRotation)
         {
-            // Pitch
             transform.rotation *= Quaternion.AngleAxis(
                 -Input.GetAxis("Mouse Y") * _mouseSense,
                 Vector3.right
             );
 
-            // Paw
             transform.rotation = Quaternion.Euler(
                 transform.eulerAngles.x,
                 transform.eulerAngles.y + Input.GetAxis("Mouse X") * _mouseSense,
@@ -208,11 +201,72 @@ public class FreeFlyCamera : MonoBehaviour
             );
         }
 
-        // Return to init position
         if (Input.GetKeyDown(_initPositonButton))
         {
             transform.position = _initPosition;
             transform.eulerAngles = _initRotation;
         }
+    }
+
+    // -------------------------------------------------------------
+    //                        MOBILE TOUCH
+    // -------------------------------------------------------------
+
+    private Vector2 lastTouch;
+    private bool isTouching = false;
+
+    private float touchRotateSpeed = 0.12f;
+    private float touchZoomSpeed = 0.02f;
+
+    private void HandleMobileControls()
+    {
+        if (Input.touchCount == 0)
+        {
+            isTouching = false;
+            return;
+        }
+
+        Touch t = Input.GetTouch(0);
+
+        if (t.phase == TouchPhase.Began)
+        {
+            isTouching = true;
+            lastTouch = t.position;
+            return;
+        }
+
+        if (!isTouching)
+            return;
+
+        Vector2 delta = t.position - lastTouch;
+        lastTouch = t.position;
+
+        // ROTATION
+        transform.rotation *= Quaternion.AngleAxis(-delta.y * touchRotateSpeed, Vector3.right);
+
+        transform.rotation = Quaternion.Euler(
+            transform.eulerAngles.x,
+            transform.eulerAngles.y + delta.x * touchRotateSpeed,
+            transform.eulerAngles.z
+        );
+
+        // ZOOM / FORWARD/BACKWARD
+        float moveAmount = -delta.y * touchZoomSpeed;
+        transform.Translate(Vector3.forward * moveAmount * _movementSpeed * Time.deltaTime);
+    }
+
+    // -------------------------------------------------------------
+    //                        UPDATE
+    // -------------------------------------------------------------
+    private void Update()
+    {
+        if (!_active)
+            return;
+
+#if UNITY_ANDROID || UNITY_IOS
+        HandleMobileControls();
+#else
+        HandlePCControls();
+#endif
     }
 }
