@@ -1,0 +1,29 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Bb]in/
+[Ll]ogs/
+
+UserSettings/
+MemoryCaptures/
+*.csproj
+*.sln
+*.pidb
+*.user
+*.unityproj
+*.suo
+*.tmp
+*.svd
+*.pdb
+*.mdb
+
+# Visual Studio cache
+.vs/
+
+# Rider
+.idea/
+
+# Unity Generated
+ProjectSettings/Graphics.yaml

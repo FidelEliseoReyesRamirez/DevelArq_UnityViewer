@@ -1,0 +1,13 @@
+<linker>
+  <assembly fullname="Unity.glTF.Fast">
+    <type fullname="GLTFast.GltfImport" preserve="all"/>
+    <type fullname="GLTFast.GltfAsset" preserve="all"/>
+    <namespace fullname="GLTFast" preserve="all"/>
+  </assembly>
+  
+  <assembly fullname="Unity.glTF.Fast.Schema">
+    <namespace fullname="GLTFast.Schema" preserve="all"/>
+  </assembly>
+  
+  <assembly fullname="System.Collections.Generic" preserve="all"/>
+</linker>
